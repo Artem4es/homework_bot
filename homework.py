@@ -6,6 +6,7 @@ import sys
 import time
 
 from dotenv import load_dotenv
+from telegram.error import Unauthorized
 import requests
 import telegram
 
@@ -55,6 +56,7 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
+
     """Проверяет наличие необходимых переменных окружения"""
     tokens = {
         'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
@@ -68,14 +70,22 @@ def check_tokens():
 
 
 def send_message(bot, message):
+
     """Отправка сообщения в телеграм"""
     try:
+        # TypeError в тексте Unauthorized если токен
         bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
         logger.debug(f'Сообщение успешно отправлено: {message}')
-    except:
-        logger.error('Cбой при отправке сообщения')
+    except Unauthorized:
+        logger.error('Cообщение не отправлено. Ошибка авторизации телеграм')
         raise SendMessageError(
-            f'Ошибка при отправке сообщения. Телеграм токен: {bot.token}, '
+            f'Ошибка при отправке сообщения. Бот токен: {bot.token}, '
+            f'сообщение: {message}, chat_id: {TELEGRAM_CHAT_ID}'
+        )
+    except Exception:
+        logger.error('Что-то пошло не по плану при отправке сообщения')
+        raise SendMessageError(
+            f'Ошибка при отправке сообщения. Бот токен: {bot.token}, '
             f'сообщение: {message}, chat_id: {TELEGRAM_CHAT_ID}'
         )
 
