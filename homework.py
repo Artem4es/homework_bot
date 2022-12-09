@@ -148,43 +148,45 @@ def main():
             homework = get_api_answer(timestamp)
             status = parse_status(homework)
             if status:
-                send_message(bot, status)
-            time.sleep(RETRY_PERIOD)
+                send_message(bot, status)  # без переменных должен exception!
+            time.sleep(RETRY_PERIOD)  # упирается сюда
 
-        except JSONDecodeError as error:
-            message = f'Формат ответа API не JSON: {error}'
-            logger.error(error)
-            if api_errors[JSONDecodeError] is False:
-                send_message(bot, message)
-                api_errors[JSONDecodeError] = True
+        # except JSONDecodeError as error: # нужен? частный случай
+        #     message = f'Формат ответа API не JSON: {error}'
+        #     logger.error(error)
+        #     if api_errors[JSONDecodeError] is False:
+        #         send_message(bot, message)
+        #         api_errors[JSONDecodeError] = True
 
-        except ResponseFormatError as error:
-            logger.error(error)
-            message = str(error)
-            if api_errors[ResponseFormatError] is False:
-                send_message(bot, message)
-                api_errors[ResponseFormatError] = True
+        # except ResponseFormatError as error:
+        #     logger.error(error)
+        #     message = str(error)
+        #     if api_errors[ResponseFormatError] is False:
+        #         send_message(bot, message)
+        #         api_errors[ResponseFormatError] = True
 
-        except HomeworkStatusError as error:
-            logger.error(error)
-            message = str(error)
-            if api_errors[HomeworkStatusError] is False:
-                send_message(bot, message)
-                api_errors[HomeworkStatusError] = True
+        # except HomeworkStatusError as error:
+        #     logger.error(error)
+        #     message = str(error)
+        #     if api_errors[HomeworkStatusError] is False:
+        #         send_message(bot, message)
+        #         api_errors[HomeworkStatusError] = True
 
-        except BadRequestError as error:
-            logger.error(error)
-            message = str(error)
-            if api_errors[BadRequestError] is False:
-                send_message(bot, message)
-                api_errors[BadRequestError] = True
+        # except BadRequestError as error:
+        #     logger.error(error)
+        #     message = str(error)
+        #     if api_errors[BadRequestError] is False:
+        #         send_message(bot, message)
+        #         api_errors[BadRequestError] = True
 
-        except SendMessageError as error:
-            logger.error(error)  # где сообщения отправлять еще?
-            # чем частные исключения тут лучше?
-        except Exception as error:  # может ему все отправлять?
+        # except SendMessageError as error:
+        #     logger.error(error)  # где сообщения отправлять еще?
+        #     # чем частные исключения тут лучше?
+        except Exception as error:  # может ему все отправлять? тесты проходит
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
+        # finally:
+        #     time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
