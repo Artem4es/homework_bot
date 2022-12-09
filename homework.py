@@ -118,8 +118,8 @@ def check_response(response):
 
 def parse_status(homework):
     """
-    Извлекает статус последней домашки и в случае обновления статуса
-    возвращает новый статус в виде строки.
+    Извлекает статус последней домашки и в случае обновления статуса.
+    Возвращает новый статус в виде строки.
     """
     global last_parse_status
     try:
@@ -180,7 +180,7 @@ def main():
                 api_errors[BadRequestError] = True
 
         except SendMessageError as error:
-            logger.error(error)
+            logger.error(error)  # где сообщения отправлять еще?
             # чем частные исключения тут лучше?
         except Exception as error:  # может ему все отправлять?
             message = f'Сбой в работе программы: {error}'
