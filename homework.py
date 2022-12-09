@@ -1,9 +1,13 @@
 from json import JSONDecodeError
 from logging import StreamHandler
-import logging, os, sys, time
+import logging
+import os
+import sys
+import time
 
 from dotenv import load_dotenv
-import requests, telegram
+import requests
+import telegram
 
 from exсeptions import (
     BadRequestError,
@@ -58,7 +62,7 @@ def check_tokens():
         'TELEGRAM_CHAT_ID': TELEGRAM_CHAT_ID,
     }
     for token, value in tokens.items():
-        if value == None:
+        if value is None:
             logger.critical(f'Недоступен токен {token}.Программа остановлена')
             exit(f'Не найден токен {token}. Программа остановлена')
 
