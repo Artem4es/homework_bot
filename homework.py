@@ -6,6 +6,7 @@ import sys
 import time
 
 from dotenv import load_dotenv
+from requests.exceptions import MissingSchema, RequestException
 from telegram.error import Unauthorized
 import requests
 import telegram
@@ -69,8 +70,7 @@ def check_tokens():
 
 
 def send_message(bot, message):
-    """Отправка сообщения в телеграм"""
-
+    """Отправка сообщения в телеграм."""
     try:
         # TypeError в тексте Unauthorized если токен
         bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
@@ -90,12 +90,14 @@ def send_message(bot, message):
 
 
 def get_api_answer(timestamp):
-    """Получение ответа от API домашки"""
+    """Получение ответа от API домашки."""
     date = {'from_date': timestamp}
     try:
         response = requests.get(url=ENDPOINT, headers=HEADERS, params=date)
-    except:
-        raise BadRequestError(f'Неудачный запрос к эндпоинту: {ENDPOINT}')
+    except MissingSchema as error:
+        raise Exception(error)
+    except RequestException as error:
+        raise Exception(error)
     response = response.json()
     check_response(response)
     homeworks = response.get('homeworks')
@@ -105,27 +107,27 @@ def get_api_answer(timestamp):
 
 
 def check_response(response):
-    """Проверка формата ответа API"""
+    """Проверка формата ответа API."""
     try:
         actual = response['homeworks']
         if not isinstance(actual, list):
             raise TypeError
-    except:
-        raise TypeError
+    except KeyError:
+        raise ResponseFormatError(response)
 
 
 def parse_status(homework):
     """
     Извлекает статус последней домашки и в случае обновления статуса
-    возвращает новый статус в виде строки
+    возвращает новый статус в виде строки.
     """
     global last_parse_status
     try:
         new_status = homework['status']
         homework_name = homework['homework_name']
-    except:
+    except KeyError:
         raise HomeworkStatusError(homework)
-    if new_status not in HOMEWORK_VERDICTS and new_status != None:
+    if new_status not in HOMEWORK_VERDICTS and new_status is not None:
         raise HomeworkStatusError(f'Неизвестный статус домашки: {new_status}')
     if last_parse_status != new_status:
         homework_name = homework.get('homework_name')
@@ -152,35 +154,35 @@ def main():
         except JSONDecodeError as error:
             message = f'Формат ответа API не JSON: {error}'
             logger.error(error)
-            if api_errors[JSONDecodeError] == False:
+            if api_errors[JSONDecodeError] is False:
                 send_message(bot, message)
                 api_errors[JSONDecodeError] = True
 
         except ResponseFormatError as error:
             logger.error(error)
             message = str(error)
-            if api_errors[ResponseFormatError] == False:
+            if api_errors[ResponseFormatError] is False:
                 send_message(bot, message)
                 api_errors[ResponseFormatError] = True
 
         except HomeworkStatusError as error:
             logger.error(error)
             message = str(error)
-            if api_errors[HomeworkStatusError] == False:
+            if api_errors[HomeworkStatusError] is False:
                 send_message(bot, message)
                 api_errors[HomeworkStatusError] = True
 
         except BadRequestError as error:
             logger.error(error)
             message = str(error)
-            if api_errors[BadRequestError] == False:
+            if api_errors[BadRequestError] is False:
                 send_message(bot, message)
                 api_errors[BadRequestError] = True
 
         except SendMessageError as error:
             logger.error(error)
-
-        except Exception as error:
+            # чем частные исключения тут лучше?
+        except Exception as error:  # может ему все отправлять?
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
 

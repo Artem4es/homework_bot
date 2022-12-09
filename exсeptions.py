@@ -1,9 +1,9 @@
 class BadRequestError(Exception):
-    """Ошибка при запросе к эндпоинту"""
+    """Ошибка при запросе к эндпоинту."""
 
 
 class ResponseFormatError(Exception):
-    """Определяет тип ошибки в ответе API"""
+    """Определяет тип ошибки в ответе API."""
 
     def __init__(self, response):
         self.response = response
@@ -30,7 +30,7 @@ class ResponseFormatError(Exception):
 
 
 class HomeworkStatusError(Exception):
-    """Ошибка в статусе домашней работы"""
+    """Ошибка в статусе домашней работы."""
 
     def __init__(self, homework):
         self.homework = homework
@@ -46,6 +46,6 @@ class HomeworkStatusError(Exception):
 
 
 class SendMessageError(Exception):
-    """Ошибка при отправке сообщения"""
+    """Ошибка при отправке сообщения."""
 
     ...
