@@ -56,8 +56,8 @@ HOMEWORK_VERDICTS = {
 
 
 def check_tokens():
-
     """Проверяет наличие необходимых переменных окружения"""
+
     tokens = {
         'PRACTICUM_TOKEN': PRACTICUM_TOKEN,
         'TELEGRAM_TOKEN': TELEGRAM_TOKEN,
@@ -70,8 +70,8 @@ def check_tokens():
 
 
 def send_message(bot, message):
-
     """Отправка сообщения в телеграм"""
+
     try:
         # TypeError в тексте Unauthorized если токен
         bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
