@@ -7,15 +7,13 @@ import time
 
 from dotenv import load_dotenv
 from requests.exceptions import MissingSchema, RequestException
-from telegram.error import Unauthorized
+from telegram.error import BadRequest
 import requests
 import telegram
 
 from exсeptions import (
-    BadRequestError,
     HomeworkStatusError,
     ResponseFormatError,
-    SendMessageError,
 )
 
 load_dotenv()
@@ -32,12 +30,8 @@ handler = StreamHandler(sys.stdout)
 logger.addHandler(handler)
 
 last_parse_status = None
-api_errors = {
-    BadRequestError: False,
-    JSONDecodeError: False,
-    ResponseFormatError: False,
-    HomeworkStatusError: False,
-}
+api_errors = []
+
 
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
@@ -72,21 +66,11 @@ def check_tokens():
 def send_message(bot, message):
     """Отправка сообщения в телеграм."""
     try:
-        # TypeError в тексте Unauthorized если токен
-        bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
+        bot.send_message(text=int, chat_id=TELEGRAM_CHAT_ID)
         logger.debug(f'Сообщение успешно отправлено: {message}')
-    except Unauthorized:
-        logger.error('Cообщение не отправлено. Ошибка авторизации телеграм')
-        raise SendMessageError(
-            f'Ошибка при отправке сообщения. Бот токен: {bot.token}, '
-            f'сообщение: {message}, chat_id: {TELEGRAM_CHAT_ID}'
-        )
     except Exception:
-        logger.error('Что-то пошло не по плану при отправке сообщения')
-        raise SendMessageError(
-            f'Ошибка при отправке сообщения. Бот токен: {bot.token}, '
-            f'сообщение: {message}, chat_id: {TELEGRAM_CHAT_ID}'
-        )
+        message = 'Неизвестная ошибка при отправке сообщения!'
+        logger.exception(message)  # так больше информации об ошибке
 
 
 def get_api_answer(timestamp):
@@ -94,9 +78,7 @@ def get_api_answer(timestamp):
     date = {'from_date': timestamp}
     try:
         response = requests.get(url=ENDPOINT, headers=HEADERS, params=date)
-    except MissingSchema as error:
-        raise Exception(error)
-    except RequestException as error:
+    except Exception as error:
         raise Exception(error)
     response = response.json()
     check_response(response)
@@ -148,45 +130,25 @@ def main():
             homework = get_api_answer(timestamp)
             status = parse_status(homework)
             if status:
-                send_message(bot, status)  # без переменных должен exception!
-            time.sleep(RETRY_PERIOD)  # упирается сюда
+                send_message(bot, status)
+            time.sleep(RETRY_PERIOD)
 
-        # except JSONDecodeError as error: # нужен? частный случай
-        #     message = f'Формат ответа API не JSON: {error}'
-        #     logger.error(error)
-        #     if api_errors[JSONDecodeError] is False:
-        #         send_message(bot, message)
-        #         api_errors[JSONDecodeError] = True
+        except JSONDecodeError as error:
+            message = f'Формат ответа API не JSON: {error}'
+            logger.error(message)
+            if message not in api_errors:
+                send_message(bot, message)
+                api_errors.append(message)
 
-        # except ResponseFormatError as error:
-        #     logger.error(error)
-        #     message = str(error)
-        #     if api_errors[ResponseFormatError] is False:
-        #         send_message(bot, message)
-        #         api_errors[ResponseFormatError] = True
-
-        # except HomeworkStatusError as error:
-        #     logger.error(error)
-        #     message = str(error)
-        #     if api_errors[HomeworkStatusError] is False:
-        #         send_message(bot, message)
-        #         api_errors[HomeworkStatusError] = True
-
-        # except BadRequestError as error:
-        #     logger.error(error)
-        #     message = str(error)
-        #     if api_errors[BadRequestError] is False:
-        #         send_message(bot, message)
-        #         api_errors[BadRequestError] = True
-
-        # except SendMessageError as error:
-        #     logger.error(error)  # где сообщения отправлять еще?
-        #     # чем частные исключения тут лучше?
-        except Exception as error:  # может ему все отправлять? тесты проходит
+        except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
-        # finally:
-        #     time.sleep(RETRY_PERIOD)
+            if message not in api_errors:
+                send_message(bot, message)
+                api_errors.append(message)
+
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
