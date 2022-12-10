@@ -6,8 +6,6 @@ import sys
 import time
 
 from dotenv import load_dotenv
-from requests.exceptions import MissingSchema, RequestException
-from telegram.error import BadRequest
 import requests
 import telegram
 
