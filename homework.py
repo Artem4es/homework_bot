@@ -64,7 +64,7 @@ def check_tokens():
 def send_message(bot, message):
     """Отправка сообщения в телеграм."""
     try:
-        bot.send_message(text=int, chat_id=TELEGRAM_CHAT_ID)
+        bot.send_message(text=message, chat_id=TELEGRAM_CHAT_ID)
         logger.debug(f'Сообщение успешно отправлено: {message}')
     except Exception:
         message = 'Неизвестная ошибка при отправке сообщения!'
