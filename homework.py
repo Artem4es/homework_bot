@@ -146,9 +146,6 @@ def main():
                     send_message(bot, message)
                     api_errors.append(message)
 
-            except MessageError as error:
-                logger.error(error)
-
             except Exception as error:
                 message = f'Сбой в работе программы: {error}'
                 logger.error(message)
