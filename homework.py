@@ -135,7 +135,7 @@ def main():
         raise TelegramError(f'Ошибка при инциализации бота: {error}')
     timestamp = int(time.time())
 
-    while True:
+    while True:  # если добавить хотя бы одно условие -> main too complex (11)
         try:
             homework = get_api_answer(timestamp)
             status = parse_status(homework)
@@ -148,10 +148,6 @@ def main():
             if message not in api_errors:
                 send_message(bot, message)
                 api_errors.append(message)
-
-        except MessageError as error:  # добавил
-            logger.error(error)
-
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
