@@ -139,13 +139,6 @@ def main():
                     send_message(bot, status)
                 time.sleep(RETRY_PERIOD)
 
-            except ConnectionError as error:
-                logger.error(error)
-                message = str(error)
-                if message not in api_errors:
-                    send_message(bot, message)
-                    api_errors.append(message)
-
             except JSONDecodeError as error:
                 message = f'Формат ответа API не JSON: {error}'
                 logger.error(message)
