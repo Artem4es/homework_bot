@@ -1,5 +1,9 @@
+class ConnectionError(Exception):
+    """Ошибка при запросе к API Домашки"""
+
+
 class HomeworkStatusError(Exception):
-    """Ошибка в статусе домашней работы."""  # +
+    """Ошибка в статусе домашней работы."""
 
     def __init__(self, homework):
         self.homework = homework
@@ -14,6 +18,10 @@ class HomeworkStatusError(Exception):
 
     def __str__(self):
         return f'{self.message} homework: {self.homework}'
+
+
+class MessageError(Exception):
+    """Ошибка при отправке сообщения в Телеграм."""
 
 
 class ResponseFormatError(Exception):
