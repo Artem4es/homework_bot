@@ -128,7 +128,7 @@ def parse_status(homework):
 
 def main():
     """Основная логика работы бота."""
-    check_tokens()  # было 11 убрал 1 if
+    check_tokens()
     try:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
     except TelegramError as error:
@@ -148,6 +148,10 @@ def main():
             if message not in api_errors:
                 send_message(bot, message)
                 api_errors.append(message)
+
+        except MessageError as error:  # добавил
+            logger.error(error)
+
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logger.error(message)
