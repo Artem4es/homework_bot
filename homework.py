@@ -54,7 +54,9 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Проверяет наличие необходимых переменных окружения."""
-    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
+    if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
+        logger.critical('Не найдены токены! Завершение программы')
+        sys.exit()
 
 
 def send_message(bot, message):
@@ -124,40 +126,34 @@ def parse_status(homework):
 
 def main():
     """Основная логика работы бота."""
-    if check_tokens():
+    check_tokens()
+    try:
+        bot = telegram.Bot(token=TELEGRAM_TOKEN)
+    except TelegramError as error:
+        raise TelegramError(f'Ошибка при инциализации бота: {error}')
+    timestamp = int(time.time())
+
+    while True:
         try:
-            bot = telegram.Bot(token=TELEGRAM_TOKEN)
-        except TelegramError as error:
-            raise TelegramError(f'Ошибка при инциализации бота: {error}')
-        timestamp = int(time.time())
-
-        while True:
-            try:
-                homework = get_api_answer(timestamp)
-                status = parse_status(homework)
-                if status:
-                    send_message(bot, status)
-                time.sleep(RETRY_PERIOD)
-
-            except JSONDecodeError as error:
-                message = f'Формат ответа API не JSON: {error}'
-                logger.error(message)
-                if message not in api_errors:
-                    send_message(bot, message)
-                    api_errors.append(message)
-
-            except Exception as error:
-                message = f'Сбой в работе программы: {error}'
-                logger.error(message)
-                if message not in api_errors:
-                    send_message(bot, message)
-                    api_errors.append(message)
-
-            finally:
-                time.sleep(RETRY_PERIOD)
-
-    logger.critical('Не найдены токены! Завершение программы')
-    sys.exit()
+            homework = get_api_answer(timestamp)
+            status = parse_status(homework)
+            if status:
+                send_message(bot, status)
+            time.sleep(RETRY_PERIOD)
+        except JSONDecodeError as error:
+            message = f'Формат ответа API не JSON: {error}'
+            logger.error(message)
+            if message not in api_errors:
+                send_message(bot, message)
+                api_errors.append(message)
+        except Exception as error:
+            message = f'Сбой в работе программы: {error}'
+            logger.error(message)
+            if message not in api_errors:
+                send_message(bot, message)
+                api_errors.append(message)
+        finally:
+            time.sleep(RETRY_PERIOD)
 
 
 if __name__ == '__main__':
