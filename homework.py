@@ -40,10 +40,8 @@ PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
-RETRY_PERIOD = int(os.getenv('RETRY_PERIOD', 600))
-ENDPOINT = os.getenv(
-    'ENDPOINT', 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
-)
+RETRY_PERIOD = int(os.getenv('RETRY_PERIOD'))
+ENDPOINT = os.getenv('ENDPOINT')
 
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
@@ -56,9 +54,7 @@ HOMEWORK_VERDICTS = {
 
 def check_tokens():
     """Проверяет наличие необходимых переменных окружения."""
-    if not all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID]):
-        logger.critical('Не найдены токены! Завершение программы')
-        sys.exit()
+    return all([PRACTICUM_TOKEN, TELEGRAM_TOKEN, TELEGRAM_CHAT_ID])
 
 
 def send_message(bot, message):
@@ -126,36 +122,53 @@ def parse_status(homework):
     logger.debug('Статус домашки не изменился')
 
 
+# flake8: noqa: C901
 def main():
     """Основная логика работы бота."""
-    check_tokens()
-    try:
-        bot = telegram.Bot(token=TELEGRAM_TOKEN)
-    except TelegramError as error:
-        raise TelegramError(f'Ошибка при инциализации бота: {error}')
-    timestamp = int(time.time())
-
-    while True:  # если добавить хотя бы одно условие -> main too complex (11)
+    if check_tokens():
         try:
-            homework = get_api_answer(timestamp)
-            status = parse_status(homework)
-            if status:
-                send_message(bot, status)
-            time.sleep(RETRY_PERIOD)
-        except JSONDecodeError as error:
-            message = f'Формат ответа API не JSON: {error}'
-            logger.error(message)
-            if message not in api_errors:
-                send_message(bot, message)
-                api_errors.append(message)
-        except Exception as error:
-            message = f'Сбой в работе программы: {error}'
-            logger.error(message)
-            if message not in api_errors:
-                send_message(bot, message)
-                api_errors.append(message)
-        finally:
-            time.sleep(RETRY_PERIOD)
+            bot = telegram.Bot(token=TELEGRAM_TOKEN)
+        except TelegramError as error:
+            raise TelegramError(f'Ошибка при инциализации бота: {error}')
+        timestamp = int(time.time())
+
+        while True:
+            try:
+                homework = get_api_answer(timestamp)
+                status = parse_status(homework)
+                if status:
+                    send_message(bot, status)
+                time.sleep(RETRY_PERIOD)
+
+            except ConnectionError as error:
+                logger.error(error)
+                message = str(error)
+                if message not in api_errors:
+                    send_message(bot, message)
+                    api_errors.append(message)
+
+            except JSONDecodeError as error:
+                message = f'Формат ответа API не JSON: {error}'
+                logger.error(message)
+                if message not in api_errors:
+                    send_message(bot, message)
+                    api_errors.append(message)
+
+            except MessageError as error:
+                logger.error(error)
+
+            except Exception as error:
+                message = f'Сбой в работе программы: {error}'
+                logger.error(message)
+                if message not in api_errors:
+                    send_message(bot, message)
+                    api_errors.append(message)
+
+            finally:
+                time.sleep(RETRY_PERIOD)
+
+    logger.critical('Не найдены токены! Завершение программы')
+    sys.exit()
 
 
 if __name__ == '__main__':
