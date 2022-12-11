@@ -126,7 +126,7 @@ def parse_status(homework):
 
 def main():
     """Основная логика работы бота."""
-    check_tokens()
+    check_tokens()  # было 11 убрал 1 if
     try:
         bot = telegram.Bot(token=TELEGRAM_TOKEN)
     except TelegramError as error:
