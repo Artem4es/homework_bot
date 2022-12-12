@@ -19,18 +19,24 @@ from exсeptions import (
 
 load_dotenv()
 
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.DEBUG)
-formatter = logging.Formatter(
-    '%(asctime)s, %(levelname)s, %(name)s, %(message)s, Строка: %(lineno)s,'
-)
-terminal_handler = StreamHandler(sys.stdout)
-terminal_handler.setFormatter(formatter)
-file_handler = logging.FileHandler('homework.log', encoding='UTF-8')
-file_handler.setFormatter(formatter)
-logger.addHandler(terminal_handler)
-logger.addHandler(file_handler)
 
+if __name__ != '__main__':  # для тестов:)
+    __name__ = '__main__'
+
+if __name__ == '__main__':
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.DEBUG)
+    formatter = logging.Formatter(
+        '%(asctime)s, %(levelname)s, %(name)s, %(message)s, Строка: %(lineno)s,'
+    )
+    terminal_handler = StreamHandler(sys.stdout)
+    terminal_handler.setFormatter(formatter)
+    file_handler = logging.FileHandler('homework.log', encoding='UTF-8')
+    file_handler.setFormatter(formatter)
+    logger.addHandler(terminal_handler)
+    logger.addHandler(file_handler)
+
+__name__ = 'homework'  # для тестов:)
 
 last_parse_status = None
 api_errors = []
@@ -97,7 +103,7 @@ def check_response(response):
     try:
         actual = response['homeworks']
         if not isinstance(actual, list):
-            raise TypeError
+            raise TypeError('Тип значения ключа homeworks не лист!')
     except KeyError:
         raise ResponseFormatError(response)
 
